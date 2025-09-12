@@ -1,5 +1,6 @@
-from fastapi import APIRouter, HTTPException
 from typing import List
+
+from fastapi import APIRouter
 
 from src.domain.users.schemas import UserCreate
 

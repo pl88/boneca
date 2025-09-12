@@ -3,8 +3,7 @@
 This module defines the application settings that can be configured
 through environment variables or .env files.
 """
-from pydantic import ConfigDict
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -20,11 +19,7 @@ class Settings(BaseSettings):
     VERSION: str = "0.1.0"
     API_PREFIX: str = "/api/v1"
 
-    model_config = ConfigDict(
-        case_sensitive=True,
-        env_file=".env",
-        extra="ignore"
-    )
+    model_config = SettingsConfigDict(case_sensitive=True, env_file=".env", extra="ignore")
 
 
 settings = Settings()
