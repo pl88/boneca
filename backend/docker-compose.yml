@@ -1,8 +1,7 @@
-version: '3.8'
-
 name: boneca
 
 services:
+  # Production service
   boneca:
     build:
       context: .
@@ -15,24 +14,31 @@ services:
       - API_PREFIX=/api/v1
     networks:
       - boneca-network
+    profiles:
+      - prod
 
+  # Development service
   boneca-dev:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
     ports:
       - "8000:8000"
     volumes:
-      - ./src:/app/src
+      - .:/app
+    entrypoint: ["/app/src/scripts/entrypoint-dev.sh"]
+    command: ["sleep", "infinity"]
     environment:
       - PROJECT_NAME=Boneca
       - VERSION=0.1.0
       - API_PREFIX=/api/v1
-    entrypoint: ["/bin/bash", "/app/src/scripts/entrypoint-dev.sh"]
+      - ENVIRONMENT=development
+      - PYTHONPATH=/app
     networks:
       - boneca-network
     profiles:
       - dev
+    working_dir: /app
 
 networks:
   boneca-network:

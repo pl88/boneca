@@ -1,0 +1,28 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install Poetry
+RUN pip install poetry
+
+# Install system dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    curl \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy all project files including tests
+COPY pyproject.toml poetry.lock* ./
+COPY src/ ./src/
+COPY tests/ ./tests/
+
+# Install all dependencies including dev dependencies
+RUN poetry config virtualenvs.create false && \
+    poetry install --no-interaction --no-ansi
+
+# Expose port
+EXPOSE 8000
+
+# Set development entrypoint
+ENTRYPOINT ["/entrypoint-dev.sh"]

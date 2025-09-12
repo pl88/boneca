@@ -1,3 +1,7 @@
+"""Main application module.
+
+This module initializes the FastAPI application and configures the main routes.
+"""
 from fastapi import FastAPI
 
 from src.api.router import router as api_router
@@ -12,6 +16,12 @@ boneca = FastAPI(
 
 boneca.include_router(api_router, prefix=settings.API_PREFIX)
 
+
 @boneca.get("/")
-async def root():
+async def root() -> dict:
+    """Get root endpoint that returns a welcome message.
+
+    Returns:
+        dict: A dictionary containing the welcome message.
+    """
     return {"message": "Hello Boneca users!"}

@@ -1,7 +1,7 @@
 # Backend Makefile
 
 .PHONY: help help-full \
-run-dev-backend clean-backend test-backend \
+run-dev-backend clean-backend test-backend test-watch-backend \
 lint-backend lint-branch-backend \
 format-backend format-branch-backend \
 poetry-lock-backend build-backend \
@@ -90,48 +90,91 @@ poetry-lock-backend:
 
 # Testing and quality commands
 test-backend:
-	$(DOCKER_COMPOSE) run --rm boneca poetry run pytest tests -v --cov=src
+	@echo "Starting development container if not running..."
+	$(DOCKER_COMPOSE) --profile dev up -d boneca-dev
+	@echo "Running tests in the container..."
+	$(DOCKER_COMPOSE) exec boneca-dev poetry run pytest \
+		tests \
+		-v \
+		--cov=src \
+		--cov-report=term-missing \
+		--cov-report=html \
+		--asyncio-mode=auto \
+		$(PYTEST_ARGS)
+
+test-watch-backend:
+	@echo "Starting development container if not running..."
+	$(DOCKER_COMPOSE) --profile dev up -d boneca-dev
+	@echo "Running tests in watch mode in the container..."
+	$(DOCKER_COMPOSE) exec boneca-dev poetry run pytest \
+		tests \
+		-v \
+		--cov=src \
+		--cov-report=term-missing \
+		--cov-report=html \
+		--asyncio-mode=auto \
+		-f \
+		$(PYTEST_ARGS)
 
 lint-backend:
-	$(DOCKER_COMPOSE) run --rm boneca poetry run flake8 src tests
-	$(DOCKER_COMPOSE) run --rm boneca poetry run mypy src tests
-	$(DOCKER_COMPOSE) run --rm boneca poetry run black --check src tests
-	$(DOCKER_COMPOSE) run --rm boneca poetry run isort --check-only src tests
+	@echo "Starting development container if not running..."
+	$(DOCKER_COMPOSE) --profile dev up -d boneca-dev
+	@echo "Running linting checks in the container..."
+	$(DOCKER_COMPOSE) exec boneca-dev sh -c "\
+		cd /app && \
+		poetry run flake8 src tests && \
+		poetry run mypy --explicit-package-bases src tests && \
+		poetry run black --check src tests && \
+		poetry run isort --check-only src tests"
+
+lint-strict-backend: lint-backend
+	$(DOCKER_COMPOSE) --profile dev run --rm boneca-dev poetry run flake8 src tests --select=D,B,C,S  # docstring, bugbear, comprehensions, simplify
 
 lint-branch-backend:
-	$(DOCKER_COMPOSE) run --rm boneca /bin/bash -c '\
-		git diff --name-only origin/main | grep "\.py$$" | \
+	$(DOCKER_COMPOSE) --profile dev run --rm boneca-dev sh -c "\
+		git diff --name-only origin/main | grep '\.py$$' | \
 		xargs -r poetry run flake8 && \
-		git diff --name-only origin/main | grep "\.py$$" | \
+		git diff --name-only origin/main | grep '\.py$$' | \
 		xargs -r poetry run black --check && \
-		git diff --name-only origin/main | grep "\.py$$" | \
-		xargs -r poetry run isort --check-only'
+		git diff --name-only origin/main | grep '\.py$$' | \
+		xargs -r poetry run isort --check-only"
 
 format-backend:
-	$(DOCKER_COMPOSE) run --rm boneca poetry run black src tests
-	$(DOCKER_COMPOSE) run --rm boneca poetry run isort src tests
+	@echo "Starting development container if not running..."
+	$(DOCKER_COMPOSE) --profile dev up -d boneca-dev
+	@echo "Running code formatting in the container..."
+	$(DOCKER_COMPOSE) exec boneca-dev sh -c "\
+		poetry run black src tests && \
+		poetry run isort src tests"
 
 format-branch-backend:
-	$(DOCKER_COMPOSE) run --rm boneca /bin/bash -c '\
-		git diff --name-only origin/main | grep "\.py$$" | \
+	@echo "Starting development container if not running..."
+	$(DOCKER_COMPOSE) --profile dev up -d boneca-dev
+	@echo "Running code formatting on changed files in the container..."
+	$(DOCKER_COMPOSE) exec boneca-dev sh -c "\
+		git diff --name-only origin/main | grep '\.py$$' | \
 		xargs -r poetry run black && \
-		git diff --name-only origin/main | grep "\.py$$" | \
-		xargs -r poetry run isort'
+		git diff --name-only origin/main | grep '\.py$$' | \
+		xargs -r poetry run isort"
 
 # Cleanup commands
 clean-backend:
+	$(DOCKER_COMPOSE) stop || true
+	# Run cleanup inside Docker first
+	$(DOCKER_COMPOSE) --profile dev run --rm boneca-dev sh -c "\
+		find /app -type d -name '__pycache__' -exec rm -rf {} + 2>/dev/null || true && \
+		find /app -type f -name '*.pyc' -delete 2>/dev/null || true && \
+		find /app -type f -name '*.pyo' -delete 2>/dev/null || true && \
+		find /app -type f -name '*.pyd' -delete 2>/dev/null || true && \
+		find /app -type f -name '.coverage' -delete 2>/dev/null || true && \
+		find /app -type d -name '*.egg-info' -exec rm -rf {} + 2>/dev/null || true && \
+		find /app -type d -name '*.egg' -exec rm -rf {} + 2>/dev/null || true && \
+		find /app -type d -name '.pytest_cache' -exec rm -rf {} + 2>/dev/null || true && \
+		find /app -type d -name '.mypy_cache' -exec rm -rf {} + 2>/dev/null || true"
+	# Then clean up Docker resources
 	$(DOCKER_COMPOSE) down -v --remove-orphans
 	$(DOCKER_COMPOSE) rm -f
 	docker system prune -f
-	find . -type d -name "__pycache__" -exec rm -rf {} +
-	find . -type f -name "*.pyc" -delete
-	find . -type f -name "*.pyo" -delete
-	find . -type f -name "*.pyd" -delete
-	find . -type f -name ".coverage" -delete
-	find . -type d -name "*.egg-info" -exec rm -rf {} +
-	find . -type d -name "*.egg" -exec rm -rf {} +
-	find . -type d -name ".pytest_cache" -exec rm -rf {} +
-	find . -type d -name ".mypy_cache" -exec rm -rf {} +
 
 backend-lint:
 	poetry run flake8 src tests
