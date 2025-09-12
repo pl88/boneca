@@ -1,0 +1,39 @@
+version: '3.8'
+
+name: boneca
+
+services:
+  boneca:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - PROJECT_NAME=Boneca
+      - VERSION=0.1.0
+      - API_PREFIX=/api/v1
+    networks:
+      - boneca-network
+
+  boneca-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./src:/app/src
+    environment:
+      - PROJECT_NAME=Boneca
+      - VERSION=0.1.0
+      - API_PREFIX=/api/v1
+    entrypoint: ["/bin/bash", "/app/src/scripts/entrypoint-dev.sh"]
+    networks:
+      - boneca-network
+    profiles:
+      - dev
+
+networks:
+  boneca-network:
+    name: boneca-network
