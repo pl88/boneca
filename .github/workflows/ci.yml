@@ -59,7 +59,7 @@ jobs:
       run: |
         cd backend
         poetry run flake8 src tests
-        poetry run mypy src tests
+        poetry run mypy --explicit-package-bases src tests
         poetry run black --check src tests
         poetry run isort --check-only src tests
         
