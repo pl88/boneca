@@ -29,7 +29,7 @@ jobs:
     - name: Run tests
       run: |
         cd backend
-        poetry run pytest tests -v --cov=src --cov-report=xml --cov-fail-under=100
+        PYTHONPATH=. poetry run pytest tests -v --cov=src --cov-report=xml --cov-fail-under=100
         
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4
@@ -58,15 +58,15 @@ jobs:
     - name: Run linters
       run: |
         cd backend
-        poetry run flake8 src tests
-        poetry run mypy --explicit-package-bases src tests
-        poetry run black --check src tests
-        poetry run isort --check-only src tests
+        PYTHONPATH=. poetry run flake8 src tests
+        PYTHONPATH=. poetry run mypy --explicit-package-bases src tests
+        PYTHONPATH=. poetry run black --check src tests
+        PYTHONPATH=. poetry run isort --check-only src tests
         
     - name: Run strict linters
       run: |
         cd backend
-        poetry run flake8 src tests --select=D,B,C,S
+        PYTHONPATH=. poetry run flake8 src tests --select=D,B,C,S
         
   security:
     runs-on: ubuntu-latest
