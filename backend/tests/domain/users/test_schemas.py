@@ -8,7 +8,7 @@ from src.domain.users.schemas import UserCreate
 class TestUserSchemas:
     """Test cases for user data models and schemas."""
 
-    def test_user_create_valid(self):
+    def test_user_create_valid(self) -> None:
         """Test creating a valid UserCreate instance."""
         user_data = {"name": "John Doe"}
         user = UserCreate(**user_data)
@@ -16,10 +16,10 @@ class TestUserSchemas:
         assert user.name == "John Doe"
         assert isinstance(user.name, str)
 
-    def test_user_create_missing_name(self):
+    def test_user_create_missing_name(self) -> None:
         """Test UserCreate validation with missing name."""
         with pytest.raises(ValidationError) as exc_info:
-            UserCreate()
+            UserCreate()  # type: ignore[call-arg]  # Intentionally missing required arg for test
 
         # Check that name field is required
         errors = exc_info.value.errors()
@@ -27,12 +27,12 @@ class TestUserSchemas:
         assert errors[0]["type"] == "missing"
         assert "name" in errors[0]["loc"]
 
-    def test_user_create_empty_name(self):
+    def test_user_create_empty_name(self) -> None:
         """Test UserCreate with empty name."""
         user = UserCreate(name="")
         assert user.name == ""
 
-    def test_user_create_serialization(self):
+    def test_user_create_serialization(self) -> None:
         """Test UserCreate model serialization."""
         user = UserCreate(name="Test User")
         user_dict = user.model_dump()

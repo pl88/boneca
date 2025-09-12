@@ -47,14 +47,14 @@ class TestRepository(BaseRepository[TestEntity]):
         pass
 
 
-async def test_repository_context_manager():
+async def test_repository_context_manager() -> None:
     """Test repository context manager protocol."""
     repo = TestRepository()
     async with repo:
         assert isinstance(repo, BaseRepository)
 
 
-async def test_repository_get_not_found():
+async def test_repository_get_not_found() -> None:
     """Test repository get method with non-existent entity."""
     repo = TestRepository()
     with pytest.raises(EntityNotFoundError) as exc_info:
@@ -62,7 +62,7 @@ async def test_repository_get_not_found():
     assert "Test with ID" in str(exc_info.value)
 
 
-async def test_repository_list_empty():
+async def test_repository_list_empty() -> None:
     """Test repository list method with empty repository."""
     repo = TestRepository()
     entities = await repo.list()

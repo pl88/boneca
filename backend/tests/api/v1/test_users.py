@@ -6,11 +6,11 @@ from src.domain.users.schemas import UserCreate
 class TestUsersEndpoints:
     """Test cases for users endpoints."""
 
-    def test_create_user_function_exists(self):
+    def test_create_user_function_exists(self) -> None:
         """Test that create_user function exists and is callable."""
         assert callable(create_user)
 
-    async def test_create_user_returns_welcome_message(self):
+    async def test_create_user_returns_welcome_message(self) -> None:
         """Test creating a user returns welcome message."""
         user_data = UserCreate(name="Test User")
         response = await create_user(user_data)
@@ -20,11 +20,11 @@ class TestUsersEndpoints:
         assert "Test User" in response["message"]
         assert response["message"] == "Welcome in Boneca dear Test User"
 
-    def test_list_users_function_exists(self):
+    def test_list_users_function_exists(self) -> None:
         """Test that list_users function exists and is callable."""
         assert callable(list_users)
 
-    async def test_list_users_returns_empty_list(self):
+    async def test_list_users_returns_empty_list(self) -> None:
         """Test listing users returns empty list."""
         response = await list_users()
 
@@ -33,11 +33,11 @@ class TestUsersEndpoints:
         assert isinstance(response["users"], list)
         assert response["users"] == []
 
-    def test_get_user_function_exists(self):
+    def test_get_user_function_exists(self) -> None:
         """Test that get_user function exists and is callable."""
         assert callable(get_user)
 
-    async def test_get_user_returns_user_info(self):
+    async def test_get_user_returns_user_info(self) -> None:
         """Test getting a specific user returns user info."""
         user_id = 123
         response = await get_user(user_id)

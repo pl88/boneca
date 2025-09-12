@@ -12,14 +12,14 @@ from src.core.exceptions import (
 )
 
 
-def test_boneca_error():
+def test_boneca_error() -> None:
     """Test BonecaError base class."""
     error = BonecaError("Test error", {"detail": "test"})
     assert str(error) == "Test error"
     assert error.details == {"detail": "test"}
 
 
-def test_repository_error():
+def test_repository_error() -> None:
     """Test RepositoryError base class."""
     error = RepositoryError("Test error", {"detail": "test"})
     assert str(error) == "Test error"
@@ -27,7 +27,7 @@ def test_repository_error():
     assert isinstance(error, BonecaError)
 
 
-def test_entity_not_found_error():
+def test_entity_not_found_error() -> None:
     """Test EntityNotFoundError."""
     error = EntityNotFoundError("user", "123")
     assert "User" in str(error)  # Note: gets capitalized in message
@@ -35,7 +35,7 @@ def test_entity_not_found_error():
     assert isinstance(error, RepositoryError)
 
 
-def test_entity_conflict_error():
+def test_entity_conflict_error() -> None:
     """Test EntityConflictError."""
     error = EntityConflictError("user", "email", "test@example.com")
     assert "User" in str(error)  # Note: gets capitalized in message
@@ -44,7 +44,7 @@ def test_entity_conflict_error():
     assert isinstance(error, RepositoryError)
 
 
-def test_validation_error():
+def test_validation_error() -> None:
     """Test ValidationError."""
     error = ValidationError("user", {"field": "error"})
     assert "user" in str(error)
@@ -52,7 +52,7 @@ def test_validation_error():
     assert error.details["errors"] == {"field": "error"}
 
 
-def test_connection_error():
+def test_connection_error() -> None:
     """Test ConnectionError."""
     error = ConnectionError("postgres", {"host": "localhost"})
     assert "postgres" in str(error)
@@ -60,7 +60,7 @@ def test_connection_error():
     assert "host" in error.details
 
 
-def test_configuration_error():
+def test_configuration_error() -> None:
     """Test ConfigurationError."""
     error = ConfigurationError("DATABASE_URL", "Missing required value")
     assert "DATABASE_URL" in str(error)
