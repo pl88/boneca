@@ -20,7 +20,8 @@ help:
 	@printf "    ➜ make test          │ Run full test suite\n"
 	@printf "    ➜ make clean         │ Stop and clean everything in boneca project\n"
 	@printf "    ➜ make lint-branch   │ Run linting on files changed in current branch\n"
-	@printf "    ➜ make format-branch │ Format files changed in current branch\n\n"
+	@printf "    ➜ make format-branch │ Format files changed in current branch\n"
+	@printf "    ➜ make \033[95mgo-go-boneca-rangers\033[0m │ 🦸 Complete code quality pipeline: format + lint + test\n\n"
 	@printf "    📝 Use 'make help-full' for complete documentation\n\n"
 
 help-full:
@@ -67,6 +68,7 @@ format-branch: format-branch-backend
 logs: logs-dev-backend
 attach: attach-dev-backend
 status: status-dev-backend
+go-go-boneca-rangers: go-go-boneca-rangers-backend
 
 # Development commands
 run-dev-backend:
@@ -156,6 +158,40 @@ format-branch-backend:
 		xargs -r poetry run black && \
 		git diff --name-only origin/main | grep '\.py$$' | \
 		xargs -r poetry run isort"
+
+# Complete code quality pipeline
+go-go-boneca-rangers-backend:
+	@echo "🦸 GO GO BONECA RANGERS! 🦸"
+	@echo "Starting complete code quality pipeline..."
+	@echo ""
+	@echo "⚡ Step 1: Starting development container..."
+	$(DOCKER_COMPOSE) --profile dev up -d boneca-dev
+	@echo ""
+	@echo "🎨 Step 2: Auto-formatting code with Black..."
+	$(DOCKER_COMPOSE) exec boneca-dev poetry run black src tests
+	@echo ""
+	@echo "📦 Step 3: Fixing imports with isort..."
+	$(DOCKER_COMPOSE) exec boneca-dev poetry run isort src tests
+	@echo ""
+	@echo "🔍 Step 4: Running linters (flake8, mypy, black check, isort check)..."
+	$(DOCKER_COMPOSE) exec boneca-dev sh -c "\
+		cd /app && \
+		poetry run flake8 src tests && \
+		poetry run mypy --explicit-package-bases src tests && \
+		poetry run black --check src tests && \
+		poetry run isort --check-only src tests"
+	@echo ""
+	@echo "🧪 Step 5: Running tests with coverage..."
+	$(DOCKER_COMPOSE) exec boneca-dev poetry run pytest \
+		tests \
+		-v \
+		--cov=src \
+		--cov-report=term-missing \
+		--cov-report=html \
+		--asyncio-mode=auto
+	@echo ""
+	@echo "🦸 BONECA RANGERS ASSEMBLE! All checks passed! 🦸"
+	@echo "✅ Code formatted ✅ Imports sorted ✅ Linting passed ✅ Tests passed"
 
 # Cleanup commands
 clean-backend:
