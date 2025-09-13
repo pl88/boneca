@@ -1,11 +1,13 @@
 # Backend Makefile
 
 .PHONY: help help-full \
-run-dev-backend clean-backend test-backend test-watch-backend \
-lint-backend lint-branch-backend \
+run-dev test clean lint-branch format-branch logs attach status go-go-boneca-rangers \
+run-dev-backend clean-backend test-backend \
+lint-backend lint-branch-backend lint-strict-backend \
 format-backend format-branch-backend \
 poetry-lock-backend build-backend \
-logs-dev-backend attach-dev-backend status-dev-backend# Docker compose command with project name
+logs-dev-backend attach-dev-backend status-dev-backend \
+go-go-boneca-rangers-backend# Docker compose command with project name
 DOCKER_COMPOSE := docker compose -p boneca
 
 help:
@@ -104,20 +106,6 @@ test-backend:
 		--asyncio-mode=auto \
 		$(PYTEST_ARGS)
 
-test-watch-backend:
-	@echo "Starting development container if not running..."
-	$(DOCKER_COMPOSE) --profile dev up -d boneca-dev
-	@echo "Running tests in watch mode in the container..."
-	$(DOCKER_COMPOSE) exec boneca-dev poetry run pytest \
-		tests \
-		-v \
-		--cov=src \
-		--cov-report=term-missing \
-		--cov-report=html \
-		--asyncio-mode=auto \
-		-f \
-		$(PYTEST_ARGS)
-
 lint-backend:
 	@echo "Starting development container if not running..."
 	$(DOCKER_COMPOSE) --profile dev up -d boneca-dev
@@ -211,41 +199,3 @@ clean-backend:
 	$(DOCKER_COMPOSE) down -v --remove-orphans
 	$(DOCKER_COMPOSE) rm -f
 	docker system prune -f
-
-backend-lint:
-	poetry run flake8 src tests
-	poetry run mypy src tests
-	poetry run black src tests --check
-	poetry run isort src tests --check-only
-
-backend-format:
-	poetry run black src tests
-	poetry run isort src tests
-
-backend-lint-branch:
-	git diff --name-only origin/main | grep '\.py$$' | xargs -r poetry run flake8
-	git diff --name-only origin/main | grep '\.py$$' | xargs -r poetry run black --check
-	git diff --name-only origin/main | grep '\.py$$' | xargs -r poetry run isort --check-only
-
-backend-format-branch:
-	git diff --name-only origin/main | grep '\.py$$' | xargs -r poetry run black
-	git diff --name-only origin/main | grep '\.py$$' | xargs -r poetry run isort
-
-backend-clean-local:
-	find . -type d -name "__pycache__" -exec rm -rf {} +
-	find . -type f -name "*.pyc" -delete
-	find . -type f -name "*.pyo" -delete
-	find . -type f -name "*.pyd" -delete
-	find . -type f -name ".coverage" -delete
-	find . -type d -name "*.egg-info" -exec rm -rf {} +
-	find . -type d -name "*.egg" -exec rm -rf {} +
-	find . -type d -name ".pytest_cache" -exec rm -rf {} +
-	find . -type d -name ".mypy_cache" -exec rm -rf {} +
-	find . -type f -name "*.pyc" -delete
-	find . -type f -name "*.pyo" -delete
-	find . -type f -name "*.pyd" -delete
-	find . -type f -name ".coverage" -delete
-	find . -type d -name "*.egg-info" -exec rm -rf {} +
-	find . -type d -name "*.egg" -exec rm -rf {} +
-	find . -type d -name ".pytest_cache" -exec rm -rf {} +
-	find . -type d -name ".mypy_cache" -exec rm -rf {} +

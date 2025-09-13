@@ -4,9 +4,9 @@ A modern, containerized system for managing dance schools, classes, and events.
 
 ## Documentation
 
-- [Architecture](backend/ARCHITECTURE.md) - Project structure and architectural decisions
-- [Local Development](backend/LOCAL_DEVELOPMENT.md) - Setting up local development environment
-- [Example API Requests](backend/EXAMPLE_REQUESTS.md) - Example API requests and responses
+- [Architecture](backend/docs/ARCHITECTURE.md) - Project structure and architectural decisions
+- [Local Development](backend/docs/LOCAL_DEVELOPMENT.md) - Setting up local development environment
+- [Example API Requests](backend/docs/EXAMPLE_REQUESTS.md) - Example API requests and responses
 
 ## Quick Start
 
@@ -29,9 +29,9 @@ A modern, containerized system for managing dance schools, classes, and events.
 
 ## Development
 
-For detailed development instructions, see [Local Development Guide](backend/LOCAL_DEVELOPMENT.md).
+For detailed development instructions, see [Local Development Guide](backend/docs/LOCAL_DEVELOPMENT.md).
 
-Quick commands:
+Quick commands for backend (running from boneca/backend/):
 ```bash
 # Start development server
 make run-dev
@@ -47,6 +47,9 @@ make format-backend
 
 # Lint code
 make lint-backend
+
+# Complete code quality pipeline (format + lint + test)
+make go-go-boneca-rangers
 ```
 
 ## Project Status
@@ -55,7 +58,7 @@ Current features:
 - [x] Project structure and architecture
 - [x] Development environment setup
 - [x] Health check endpoint
-- [x] Users API
+- [ ] Users API
 - [ ] Authentication
 - [ ] Classes management
 - [ ] Events management
@@ -69,7 +72,7 @@ Current features:
 4. Run tests and linting
 5. Submit a pull request
 
-For more details, see [Local Development Guide](backend/LOCAL_DEVELOPMENT.md).
+For more details, see [Local Development Guide](backend/docs/LOCAL_DEVELOPMENT.md).
 
 ## License
 
