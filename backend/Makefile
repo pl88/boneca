@@ -1,13 +1,13 @@
 # Backend Makefile
 
 .PHONY: help help-full \
-run-dev test clean lint-branch format-branch logs attach status go-go-boneca-rangers \
+run-dev test clean lint-branch format-branch logs attach status commit-ready \
 run-dev-backend clean-backend test-backend \
 lint-backend lint-branch-backend lint-strict-backend \
 format-backend format-branch-backend \
 poetry-lock-backend build-backend \
 logs-dev-backend attach-dev-backend status-dev-backend \
-go-go-boneca-rangers-backend# Docker compose command with project name
+commit-ready-backend# Docker compose command with project name
 DOCKER_COMPOSE := docker compose -p boneca
 
 help:
@@ -23,7 +23,7 @@ help:
 	@printf "    ➜ make clean         │ Stop and clean everything in boneca project\n"
 	@printf "    ➜ make lint-branch   │ Run linting on files changed in current branch\n"
 	@printf "    ➜ make format-branch │ Format files changed in current branch\n"
-	@printf "    ➜ make \033[95mgo-go-boneca-rangers\033[0m │ 🦸 Complete code quality pipeline: format + lint + test\n\n"
+	@printf "    ➜ make \033[95mcommit-ready\033[0m │ 🦸 Complete code quality pipeline: format + lint + test\n\n"
 	@printf "    📝 Use 'make help-full' for complete documentation\n\n"
 
 help-full:
@@ -70,7 +70,7 @@ format-branch: format-branch-backend
 logs: logs-dev-backend
 attach: attach-dev-backend
 status: status-dev-backend
-go-go-boneca-rangers: go-go-boneca-rangers-backend
+commit-ready: commit-ready-backend
 
 # Development commands
 run-dev-backend:
@@ -148,7 +148,7 @@ format-branch-backend:
 		xargs -r poetry run isort"
 
 # Complete code quality pipeline
-go-go-boneca-rangers-backend:
+commit-ready-backend:
 	@echo "🦸 GO GO BONECA RANGERS! 🦸"
 	@echo "Starting complete code quality pipeline..."
 	@echo ""

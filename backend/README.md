@@ -39,7 +39,7 @@ FastAPI-based backend service for the Boneca dance school management system.
 make run-dev
 
 # Run complete code quality pipeline
-make go-go-boneca-rangers
+make commit-ready
 
 # Run tests with coverage
 make test
@@ -144,12 +144,12 @@ This project maintains high code quality standards with:
 - **Linting** - flake8 for code quality
 - **CI/CD** - Automated testing and linting
 
-Use `make go-go-boneca-rangers` to run the complete quality pipeline! 🦸
+Use `make commit-ready` to run the complete quality pipeline! 🦸
 
 ## Contributing
 
 1. Make your changes
-2. Run `make go-go-boneca-rangers` to ensure code quality
+2. Run `make commit-ready` to ensure code quality
 3. All tests must pass with 100% coverage
 4. Follow the existing code style and patterns
 
