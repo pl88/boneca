@@ -1,0 +1,10 @@
+[flake8]
+max-line-length = 120
+extend-ignore = E203
+exclude = .git,__pycache__,build,dist,*.egg-info
+per-file-ignores =
+    # Allow unused imports in __init__.py files
+    __init__.py:F401
+    # Skip docstrings in tests and API endpoints
+    tests/*:D100,D101,D102,D103,F401
+    src/api/v1/*:D100,D103

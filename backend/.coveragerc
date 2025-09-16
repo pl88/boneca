@@ -1,0 +1,19 @@
+[run]
+branch = True
+source = src
+omit = src/main.py
+
+[report]
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    if __name__ == .__main__.:
+    raise NotImplementedError
+    pass
+    raise AssertionError
+
+[html]
+directory = htmlcov
+
+[xml]
+output = coverage.xml
