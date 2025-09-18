@@ -7,7 +7,8 @@ lint-backend lint-branch-backend lint-strict-backend \
 format-backend format-branch-backend \
 poetry-lock-backend build-backend \
 logs-dev-backend attach-dev-backend status-dev-backend \
-commit-ready-backend# Docker compose command with project name
+commit-ready-backend \
+db-up db-down db-status db-logs db-connect db-connect-admin db-test db-clean# Docker compose command with project name
 DOCKER_COMPOSE := docker compose -p boneca
 
 help:
@@ -24,6 +25,13 @@ help:
 	@printf "    ➜ make lint-branch   │ Run linting on files changed in current branch\n"
 	@printf "    ➜ make format-branch │ Format files changed in current branch\n"
 	@printf "    ➜ make \033[95mcommit-ready\033[0m │ 🦸 Complete code quality pipeline: format + lint + test\n\n"
+	@printf "    🗄️  Database Commands\n"
+	@printf "    ─────────────────\n"
+	@printf "    ➜ make db-up         │ Start PostgreSQL database\n"
+	@printf "    ➜ make db-down       │ Stop PostgreSQL database\n"
+	@printf "    ➜ make db-status     │ Check database status\n"
+	@printf "    ➜ make db-connect    │ Connect to database as boneca user\n"
+	@printf "    ➜ make db-test       │ Test database setup and connections\n\n"
 	@printf "    📝 Use 'make help-full' for complete documentation\n\n"
 
 help-full:
@@ -47,6 +55,16 @@ help-full:
 	@printf "    🧹 Maintenance\n"
 	@printf "    ────────────\n"
 	@printf "    ➜ make clean-backend         │ Clean Docker resources and caches\n\n"
+	@printf "    🗄️  Database Commands\n"
+	@printf "    ─────────────────\n"
+	@printf "    ➜ make db-up                 │ Start PostgreSQL database\n"
+	@printf "    ➜ make db-down               │ Stop PostgreSQL database\n"
+	@printf "    ➜ make db-status             │ Check database status\n"
+	@printf "    ➜ make db-logs               │ View database logs\n"
+	@printf "    ➜ make db-connect            │ Connect to database as boneca user\n"
+	@printf "    ➜ make db-connect-admin      │ Connect to database as admin (postgres)\n"
+	@printf "    ➜ make db-test               │ Test database setup and connections\n"
+	@printf "    ➜ make db-clean              │ Stop database and remove volumes\n\n"
 	@printf "    📚 Quick Examples\n"
 	@printf "    ──────────────\n"
 	@printf "    Development workflow:\n"
@@ -180,6 +198,61 @@ commit-ready-backend:
 	@echo ""
 	@echo "🦸 BONECA RANGERS ASSEMBLE! All checks passed! 🦸"
 	@echo "✅ Code formatted ✅ Imports sorted ✅ Linting passed ✅ Tests passed"
+
+# Database commands
+db-up:
+	@echo "🗄️  Starting PostgreSQL database..."
+	$(DOCKER_COMPOSE) --profile dev up postgres -d
+	@echo "⏳ Waiting for database to be ready..."
+	@timeout 30 bash -c 'until $(DOCKER_COMPOSE) exec postgres pg_isready -U postgres -d postgres >/dev/null 2>&1; do sleep 1; done' || echo "⚠️  Timeout waiting for database, but it may still be starting..."
+	@echo "✅ Database startup command completed!"
+
+db-down:
+	@echo "🛑 Stopping PostgreSQL database..."
+	$(DOCKER_COMPOSE) stop postgres
+
+db-status:
+	@echo "📊 Database Status:"
+	@$(DOCKER_COMPOSE) ps postgres
+	@echo ""
+	@echo "🔍 Health Check:"
+	@$(DOCKER_COMPOSE) exec postgres pg_isready -U postgres -d postgres || echo "❌ Database not ready"
+
+db-logs:
+	@echo "📜 Database logs:"
+	$(DOCKER_COMPOSE) logs postgres
+
+db-connect:
+	@echo "🔌 Connecting to database as boneca user..."
+	$(DOCKER_COMPOSE) exec postgres psql -U boneca -d boneca
+
+db-connect-admin:
+	@echo "🔌 Connecting to database as admin (postgres)..."
+	$(DOCKER_COMPOSE) exec postgres psql -U postgres -d boneca
+
+db-test:
+	@echo "🧪 Testing database setup..."
+	@echo ""
+	@echo "1️⃣  Testing admin connection..."
+	@$(DOCKER_COMPOSE) exec postgres psql -U postgres -d boneca -c "SELECT current_database(), current_user;" || echo "❌ Admin connection failed"
+	@echo ""
+	@echo "2️⃣  Testing boneca user connection..."
+	@$(DOCKER_COMPOSE) exec postgres psql -U boneca -d boneca -c "SELECT current_database(), current_schema(), current_user;" || echo "❌ Boneca user connection failed"
+	@echo ""
+	@echo "3️⃣  Testing schema permissions..."
+	@$(DOCKER_COMPOSE) exec postgres psql -U boneca -d boneca -c "\dn+ boneca" || echo "❌ Schema access failed"
+	@echo ""
+	@echo "4️⃣  Testing table creation (will rollback)..."
+	@$(DOCKER_COMPOSE) exec postgres psql -U boneca -d boneca -c "BEGIN; CREATE TABLE boneca.test_table (id SERIAL PRIMARY KEY, name TEXT); DROP TABLE boneca.test_table; ROLLBACK;" || echo "❌ Table creation test failed"
+	@echo ""
+	@echo "✅ Database test completed!"
+
+db-clean:
+	@echo "🧹 Cleaning database and volumes..."
+	$(DOCKER_COMPOSE) stop postgres
+	$(DOCKER_COMPOSE) rm -f postgres
+	docker volume rm boneca-postgres-data 2>/dev/null || true
+	@echo "✅ Database cleaned!"
 
 # Cleanup commands
 clean-backend:

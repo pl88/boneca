@@ -1,4 +1,4 @@
-name: boneca
+version: '3.8'
 
 services:
   # Production service
@@ -39,6 +39,35 @@ services:
     profiles:
       - dev
     working_dir: /app
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: boneca-postgres
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init:/docker-entrypoint-initdb.d:ro
+    networks:
+      - boneca-network
+    profiles:
+      - dev
+      - prod
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+volumes:
+  postgres_data:
+    name: boneca-postgres-data
 
 networks:
   boneca-network:
