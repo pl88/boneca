@@ -90,3 +90,25 @@ class TestDatabaseConfig:
                 url = DatabaseConfig.get_connection_url()
                 expected = "postgresql://custom_user:custom_pass@custom.host.com:5433/custom_db"
                 assert url == expected
+
+    def test_get_alembic_config(self) -> None:
+        """Test getting Alembic configuration."""
+        config = DatabaseConfig.get_alembic_config()
+
+        assert "sqlalchemy.url" in config
+        assert "target_schema" in config
+        assert "version_table_schema" in config
+        assert "include_schemas" in config
+        assert config["include_schemas"] is True
+        # Schema should be either localhost or postgres based on environment
+        assert config["target_schema"] in ["boneca"]
+        assert config["version_table_schema"] in ["boneca"]
+
+    def test_get_migration_connection_args(self) -> None:
+        """Test getting migration connection arguments."""
+        args = DatabaseConfig.get_migration_connection_args()
+
+        assert "options" in args
+        assert "sslmode" in args
+        assert "-csearch_path=boneca" in args["options"]
+        assert args["sslmode"] == "prefer"
