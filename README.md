@@ -6,6 +6,7 @@ A modern, containerized system for managing dance schools, classes, and events.
 
 - [Architecture](backend/docs/ARCHITECTURE.md) - Project structure and architectural decisions
 - [Local Development](backend/docs/LOCAL_DEVELOPMENT.md) - Setting up local development environment
+- [Database Configuration](backend/docs/DATABASE_CONFIGURATION.md) - PostgreSQL setup and configuration guide
 - [Example API Requests](backend/docs/EXAMPLE_REQUESTS.md) - Example API requests and responses
 
 ## Quick Start
