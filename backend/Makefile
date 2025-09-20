@@ -8,7 +8,8 @@ format-backend format-branch-backend \
 poetry-lock-backend build-backend \
 logs-dev-backend attach-dev-backend status-dev-backend \
 commit-ready-backend \
-db-up db-down db-status db-logs db-connect db-connect-admin db-test db-clean# Docker compose command with project name
+db-up db-down db-status db-logs db-connect db-connect-admin db-test db-clean \
+migrate-create migrate-up migrate-down migrate-status migrate-history migrate-reset migrate-stamp migrate-show# Docker compose command with project name
 DOCKER_COMPOSE := docker compose -p boneca
 
 help:
@@ -32,6 +33,12 @@ help:
 	@printf "    ➜ make db-status     │ Check database status\n"
 	@printf "    ➜ make db-connect    │ Connect to database as boneca user\n"
 	@printf "    ➜ make db-test       │ Test database setup and connections\n\n"
+	@printf "    🔄 Migration Commands\n"
+	@printf "    ────────────────────\n"
+	@printf "    ➜ make migrate-create MSG='...' │ Create new migration\n"
+	@printf "    ➜ make migrate-up               │ Run all pending migrations\n"
+	@printf "    ➜ make migrate-status           │ Check migration status\n"
+	@printf "    ➜ make migrate-history          │ Show migration history\n\n"
 	@printf "    📝 Use 'make help-full' for complete documentation\n\n"
 
 help-full:
@@ -253,6 +260,58 @@ db-clean:
 	$(DOCKER_COMPOSE) rm -f postgres
 	docker volume rm boneca-postgres-data 2>/dev/null || true
 	@echo "✅ Database cleaned!"
+
+# Migration commands (Alembic)
+migrate-create:
+	@echo "📝 Creating new migration..."
+ifdef MSG
+	$(DOCKER_COMPOSE) exec boneca-dev poetry run alembic revision --autogenerate -m "$(MSG)"
+else
+	@echo "❌ Error: Please provide a message with MSG='your message'"
+	@echo "   Example: make migrate-create MSG='Add user table'"
+endif
+
+migrate-up:
+	@echo "⬆️  Running migrations..."
+	$(DOCKER_COMPOSE) exec boneca-dev poetry run alembic upgrade head
+
+migrate-down:
+	@echo "⬇️  Rolling back migration..."
+ifdef REVISION
+	$(DOCKER_COMPOSE) exec boneca-dev poetry run alembic downgrade $(REVISION)
+else
+	$(DOCKER_COMPOSE) exec boneca-dev poetry run alembic downgrade -1
+endif
+
+migrate-status:
+	@echo "📊 Checking migration status..."
+	$(DOCKER_COMPOSE) exec boneca-dev poetry run alembic current -v
+
+migrate-history:
+	@echo "📜 Migration history..."
+	$(DOCKER_COMPOSE) exec boneca-dev poetry run alembic history -v
+
+migrate-reset:
+	@echo "🔄 Resetting all migrations..."
+	$(DOCKER_COMPOSE) exec boneca-dev poetry run alembic downgrade base
+
+migrate-stamp:
+	@echo "🏷️  Stamping database with migration version..."
+ifdef REVISION
+	$(DOCKER_COMPOSE) exec boneca-dev poetry run alembic stamp $(REVISION)
+else
+	@echo "❌ Error: Please provide a revision with REVISION='revision_id'"
+	@echo "   Example: make migrate-stamp REVISION=head"
+endif
+
+migrate-show:
+	@echo "🔍 Showing migration details..."
+ifdef REVISION
+	$(DOCKER_COMPOSE) exec boneca-dev poetry run alembic show $(REVISION)
+else
+	@echo "❌ Error: Please provide a revision with REVISION='revision_id'"
+	@echo "   Example: make migrate-show REVISION=head"
+endif
 
 # Cleanup commands
 clean-backend:

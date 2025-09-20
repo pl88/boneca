@@ -3,6 +3,8 @@
 This module provides utilities for connecting to the PostgreSQL database
 using the application configuration.
 """
+from typing import Any, Dict
+
 from src.core.config import settings
 
 
@@ -43,6 +45,32 @@ class DatabaseConfig:
         """
         return settings.DATABASE_SCHEMA
 
+    @staticmethod
+    def get_alembic_config() -> Dict[str, Any]:
+        """Get Alembic-specific database configuration.
+
+        Returns:
+            Dictionary containing Alembic configuration parameters.
+        """
+        return {
+            "sqlalchemy.url": settings.DATABASE_URL,
+            "target_schema": settings.DATABASE_SCHEMA,
+            "version_table_schema": settings.DATABASE_SCHEMA,
+            "include_schemas": True,
+        }
+
+    @staticmethod
+    def get_migration_connection_args() -> Dict[str, Any]:
+        """Get connection arguments for migration operations.
+
+        Returns:
+            Dictionary containing connection arguments for SQLAlchemy.
+        """
+        return {
+            "options": f"-csearch_path={settings.DATABASE_SCHEMA}",
+            "sslmode": "prefer",  # Default SSL mode for PostgreSQL
+        }
+
 
 # Example usage for future database implementations
 def example_connection_usage() -> None:
@@ -62,6 +90,14 @@ def example_connection_usage() -> None:
     # For schema-specific queries
     schema = DatabaseConfig.get_schema_name()
     print(f"Schema: {schema}")
+
+    # For Alembic migrations
+    alembic_config = DatabaseConfig.get_alembic_config()
+    print(f"Alembic config: {alembic_config}")
+
+    # For migration connection arguments
+    migration_args = DatabaseConfig.get_migration_connection_args()
+    print(f"Migration connection args: {migration_args}")
 
 
 if __name__ == "__main__":
