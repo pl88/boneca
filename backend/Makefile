@@ -264,6 +264,8 @@ db-clean:
 # Migration commands (Alembic)
 migrate-create:
 	@echo "📝 Creating new migration..."
+	@echo "Starting development container if not running..."
+	$(DOCKER_COMPOSE) --profile dev up -d boneca-dev
 ifdef MSG
 	$(DOCKER_COMPOSE) exec boneca-dev poetry run alembic revision --autogenerate -m "$(MSG)"
 else
@@ -273,10 +275,14 @@ endif
 
 migrate-up:
 	@echo "⬆️  Running migrations..."
+	@echo "Starting development container if not running..."
+	$(DOCKER_COMPOSE) --profile dev up -d boneca-dev
 	$(DOCKER_COMPOSE) exec boneca-dev poetry run alembic upgrade head
 
 migrate-down:
 	@echo "⬇️  Rolling back migration..."
+	@echo "Starting development container if not running..."
+	$(DOCKER_COMPOSE) --profile dev up -d boneca-dev
 ifdef REVISION
 	$(DOCKER_COMPOSE) exec boneca-dev poetry run alembic downgrade $(REVISION)
 else
@@ -285,18 +291,26 @@ endif
 
 migrate-status:
 	@echo "📊 Checking migration status..."
+	@echo "Starting development container if not running..."
+	$(DOCKER_COMPOSE) --profile dev up -d boneca-dev
 	$(DOCKER_COMPOSE) exec boneca-dev poetry run alembic current -v
 
 migrate-history:
 	@echo "📜 Migration history..."
+	@echo "Starting development container if not running..."
+	$(DOCKER_COMPOSE) --profile dev up -d boneca-dev
 	$(DOCKER_COMPOSE) exec boneca-dev poetry run alembic history -v
 
 migrate-reset:
 	@echo "🔄 Resetting all migrations..."
+	@echo "Starting development container if not running..."
+	$(DOCKER_COMPOSE) --profile dev up -d boneca-dev
 	$(DOCKER_COMPOSE) exec boneca-dev poetry run alembic downgrade base
 
 migrate-stamp:
 	@echo "🏷️  Stamping database with migration version..."
+	@echo "Starting development container if not running..."
+	$(DOCKER_COMPOSE) --profile dev up -d boneca-dev
 ifdef REVISION
 	$(DOCKER_COMPOSE) exec boneca-dev poetry run alembic stamp $(REVISION)
 else
@@ -306,6 +320,8 @@ endif
 
 migrate-show:
 	@echo "🔍 Showing migration details..."
+	@echo "Starting development container if not running..."
+	$(DOCKER_COMPOSE) --profile dev up -d boneca-dev
 ifdef REVISION
 	$(DOCKER_COMPOSE) exec boneca-dev poetry run alembic show $(REVISION)
 else
