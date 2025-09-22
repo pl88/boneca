@@ -10,7 +10,7 @@ from sqlmodel import Field, SQLModel
 
 class UserPermission(str, Enum):
     """User permission levels."""
-    
+
     ADMIN = "admin"
     INSTRUCTOR = "instructor"
     STUDENT = "student"
@@ -19,9 +19,9 @@ class UserPermission(str, Enum):
 
 class User(SQLModel, table=True):
     """User database model.
-    
+
     Represents a user in the Boneca dance school management system.
-    
+
     Attributes:
         id: Primary key identifier
         first_name: User's first name
@@ -29,13 +29,13 @@ class User(SQLModel, table=True):
         email: User's email address (unique)
         permissions: User's permission level
     """
-    
+
     __tablename__ = "users"
-    
+
     id: Optional[int] = Field(default=None, primary_key=True)
     first_name: str = Field(max_length=100, nullable=False)
     last_name: str = Field(max_length=100, nullable=False)
     email: str = Field(max_length=255, nullable=False, unique=True, index=True)
     permissions: UserPermission = Field(default=UserPermission.STUDENT)
-    
+
     model_config = {"from_attributes": True}
