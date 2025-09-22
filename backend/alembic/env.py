@@ -16,6 +16,10 @@ sys.path.insert(0, str(project_root))
 # Import our database configuration
 from src.core.config import settings  # noqa: E402
 
+# Import SQLModel and our models for autogenerate support
+from sqlmodel import SQLModel  # noqa: E402
+from src.domain.users.models import User  # noqa: E402
+
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
@@ -27,9 +31,8 @@ if config.config_file_name is not None:
 
 # add your model's MetaData object here
 # for 'autogenerate' support
-# from myapp import mymodel
-# target_metadata = mymodel.Base.metadata
-target_metadata = None
+# SQLModel uses metadata from SQLModel.metadata
+target_metadata = SQLModel.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
