@@ -1,49 +1,169 @@
-"""Tests for users endpoints."""
-from src.api.v1.users import create_user, get_user, list_users
-from src.domain.users.schemas import UserCreate
+"""Tests for users API CRUD endpoints using dependency overrides."""
+from collections.abc import Iterator
+from typing import Optional
+
+import pytest
+from fastapi.testclient import TestClient
+
+from src.domain.users.models import User, UserPermission
+from src.domain.users.schemas import UserCreate, UserUpdate
+from src.main import boneca as app
 
 
-class TestUsersEndpoints:
-    """Test cases for users endpoints."""
+class FakeUserRepo:
+    """In-memory fake UserRepository for testing without DB."""
 
-    def test_create_user_function_exists(self) -> None:
-        """Test that create_user function exists and is callable."""
-        assert callable(create_user)
+    def __init__(self) -> None:
+        """Initialize the in-memory storage and id counter."""
+        self._users: dict[int, User] = {}
+        self._next_id = 1
 
-    async def test_create_user_returns_welcome_message(self) -> None:
-        """Test creating a user returns welcome message."""
-        user_data = UserCreate(name="Test User")
-        response = await create_user(user_data)
+    def create(self, user: User) -> User:
+        user.id = self._next_id
+        self._next_id += 1
+        # emulate storage copy
+        self._users[user.id] = User(**user.model_dump())
+        return self._users[user.id]
 
-        assert isinstance(response, dict)
-        assert "message" in response
-        assert "Test User" in response["message"]
-        assert response["message"] == "Welcome in Boneca dear Test User"
+    def get_by_id(self, user_id: int) -> Optional[User]:
+        return self._users.get(user_id)
 
-    def test_list_users_function_exists(self) -> None:
-        """Test that list_users function exists and is callable."""
-        assert callable(list_users)
+    def list_users(
+        self,
+        *,
+        permission: Optional[UserPermission] = None,
+        offset: int = 0,
+        limit: int = 100,
+    ) -> list[User]:
+        users = list(self._users.values())
+        if permission:
+            users = [u for u in users if u.permissions == permission]
+        return users[offset : offset + limit]
 
-    async def test_list_users_returns_empty_list(self) -> None:
-        """Test listing users returns empty list."""
-        response = await list_users()
+    def update(self, user_id: int, user_data: dict) -> Optional[User]:
+        user = self._users.get(user_id)
+        if not user:
+            return None
+        for k, v in user_data.items():
+            if hasattr(user, k):
+                setattr(user, k, v)
+        self._users[user_id] = User(**user.model_dump())
+        return self._users[user_id]
 
-        assert isinstance(response, dict)
-        assert "users" in response
-        assert isinstance(response["users"], list)
-        assert response["users"] == []
+    def delete(self, user_id: int) -> bool:
+        return self._users.pop(user_id, None) is not None
 
-    def test_get_user_function_exists(self) -> None:
-        """Test that get_user function exists and is callable."""
-        assert callable(get_user)
 
-    async def test_get_user_returns_user_info(self) -> None:
-        """Test getting a specific user returns user info."""
-        user_id = 123
-        response = await get_user(user_id)
+@pytest.fixture()
+def client_with_fake_repo() -> Iterator[TestClient]:
+    from src.api.v1.users import get_user_repo
 
-        assert isinstance(response, dict)
-        assert "user_id" in response
-        assert "message" in response
-        assert response["user_id"] == str(user_id)
-        assert response["message"] == "User details would be here"
+    fake_repo = FakeUserRepo()
+
+    def override_get_user_repo() -> Iterator[FakeUserRepo]:
+        yield fake_repo
+
+    app.dependency_overrides[get_user_repo] = override_get_user_repo
+    client = TestClient(app)
+    try:
+        yield client
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_create_and_get_user(client_with_fake_repo: TestClient) -> None:
+    client = client_with_fake_repo
+    payload = {
+        "first_name": "Jane",
+        "last_name": "Doe",
+        "email": "jane.doe@example.com",
+        "permissions": "student",
+    }
+
+    # Create
+    r = client.post("/api/v1/users", json=payload)
+    assert r.status_code == 201, r.text
+    data = r.json()
+    assert data["id"] == 1
+    assert data["email"] == payload["email"]
+
+    # Get by id
+    r2 = client.get("/api/v1/users/1")
+    assert r2.status_code == 200
+    data2 = r2.json()
+    assert data2["first_name"] == "Jane"
+
+
+def test_list_and_filter_users(client_with_fake_repo: TestClient) -> None:
+    client = client_with_fake_repo
+
+    # Seed two users with different permissions
+    client.post(
+        "/api/v1/users",
+        json={
+            "first_name": "John",
+            "last_name": "Smith",
+            "email": "john.smith@example.com",
+            "permissions": "instructor",
+        },
+    )
+    client.post(
+        "/api/v1/users",
+        json={
+            "first_name": "Alice",
+            "last_name": "Jones",
+            "email": "alice.jones@example.com",
+            "permissions": "student",
+        },
+    )
+
+    r = client.get("/api/v1/users")
+    assert r.status_code == 200
+    all_users = r.json()
+    assert len(all_users) >= 2
+
+    r2 = client.get("/api/v1/users", params={"permission": "instructor"})
+    assert r2.status_code == 200
+    only_instructors = r2.json()
+    assert all(u["permissions"] == "instructor" for u in only_instructors)
+
+
+def test_update_and_delete_user(client_with_fake_repo: TestClient) -> None:
+    client = client_with_fake_repo
+    # Create user
+    r = client.post(
+        "/api/v1/users",
+        json={
+            "first_name": "Bob",
+            "last_name": "Brown",
+            "email": "bob.brown@example.com",
+        },
+    )
+    assert r.status_code == 201
+
+    # Patch update
+    r2 = client.patch("/api/v1/users/1", json={"first_name": "Bobby"})
+    assert r2.status_code == 200
+    assert r2.json()["first_name"] == "Bobby"
+
+    # Put replace
+    r3 = client.put(
+        "/api/v1/users/1",
+        json={
+            "first_name": "Robert",
+            "last_name": "Brown",
+            "email": "robert.brown@example.com",
+            "permissions": "viewer",
+        },
+    )
+    assert r3.status_code == 200
+    assert r3.json()["email"] == "robert.brown@example.com"
+    assert r3.json()["permissions"] == "viewer"
+
+    # Delete
+    r4 = client.delete("/api/v1/users/1")
+    assert r4.status_code == 204
+
+    # Not found after delete
+    r5 = client.get("/api/v1/users/1")
+    assert r5.status_code == 404

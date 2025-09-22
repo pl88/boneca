@@ -2,6 +2,7 @@
 import pytest
 from pydantic import ValidationError
 
+from src.domain.users.models import UserPermission
 from src.domain.users.schemas import UserCreate
 
 
@@ -10,32 +11,38 @@ class TestUserSchemas:
 
     def test_user_create_valid(self) -> None:
         """Test creating a valid UserCreate instance."""
-        user_data = {"name": "John Doe"}
-        user = UserCreate(**user_data)
+        user = UserCreate(first_name="John", last_name="Doe", email="john.doe@example.com")
 
-        assert user.name == "John Doe"
-        assert isinstance(user.name, str)
+        assert user.first_name == "John"
+        assert user.last_name == "Doe"
+        assert user.email == "john.doe@example.com"
+        # default permission
+        assert user.permissions == UserPermission.STUDENT
 
-    def test_user_create_missing_name(self) -> None:
-        """Test UserCreate validation with missing name."""
+    def test_user_create_missing_required_fields(self) -> None:
+        """Test UserCreate validation with missing required fields."""
         with pytest.raises(ValidationError) as exc_info:
-            UserCreate()  # type: ignore[call-arg]  # Intentionally missing required arg for test
+            UserCreate()  # type: ignore[call-arg]
 
-        # Check that name field is required
+        # Check that first_name, last_name, and email are required
         errors = exc_info.value.errors()
-        assert len(errors) == 1
-        assert errors[0]["type"] == "missing"
-        assert "name" in errors[0]["loc"]
+        fields = {e["loc"][0] for e in errors}
+        assert {"first_name", "last_name", "email"} <= fields
 
-    def test_user_create_empty_name(self) -> None:
-        """Test UserCreate with empty name."""
-        user = UserCreate(name="")
-        assert user.name == ""
+    def test_user_create_empty_first_name_invalid(self) -> None:
+        """Test UserCreate with empty first_name is invalid (min length 1)."""
+        with pytest.raises(ValidationError):
+            UserCreate(first_name="", last_name="Doe", email="john.doe@example.com")
 
     def test_user_create_serialization(self) -> None:
         """Test UserCreate model serialization."""
-        user = UserCreate(name="Test User")
+        user = UserCreate(first_name="Test", last_name="User", email="test.user@example.com")
         user_dict = user.model_dump()
 
-        assert user_dict == {"name": "Test User"}
+        assert user_dict == {
+            "first_name": "Test",
+            "last_name": "User",
+            "email": "test.user@example.com",
+            "permissions": "student",
+        }
         assert isinstance(user_dict, dict)

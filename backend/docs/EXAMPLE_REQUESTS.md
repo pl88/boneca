@@ -24,26 +24,23 @@ Expected response:
 
 ### GET /api/v1/users
 
-List all users:
+List users (optional filters and pagination):
 
 ```bash
-curl http://localhost:8000/api/v1/users
+curl "http://localhost:8000/api/v1/users?permission=student&offset=0&limit=50"
 ```
 
-Expected response:
+Expected response (array of users):
 ```json
-{
-    "users": [
-        {
-            "id": "1",
-            "username": "john_doe",
-            "email": "john@example.com",
-            "created_at": "2025-09-12T10:00:00Z",
-            "updated_at": "2025-09-12T10:00:00Z"
-        }
-    ],
-    "total": 1
-}
+[
+    {
+        "id": 1,
+        "first_name": "John",
+        "last_name": "Doe",
+        "email": "john@example.com",
+        "permissions": "student"
+    }
+]
 ```
 
 ### GET /api/v1/users/{user_id}
@@ -57,11 +54,11 @@ curl http://localhost:8000/api/v1/users/1
 Expected response:
 ```json
 {
-    "id": "1",
-    "username": "john_doe",
+    "id": 1,
+    "first_name": "John",
+    "last_name": "Doe",
     "email": "john@example.com",
-    "created_at": "2025-09-12T10:00:00Z",
-    "updated_at": "2025-09-12T10:00:00Z"
+    "permissions": "student"
 }
 ```
 
@@ -73,44 +70,47 @@ Create a new user:
 curl -X POST http://localhost:8000/api/v1/users \
     -H "Content-Type: application/json" \
     -d '{
-        "username": "jane_doe",
+        "first_name": "Jane",
+        "last_name": "Doe",
         "email": "jane@example.com",
-        "password": "securepassword123"
+        "permissions": "student"
     }'
 ```
 
 Expected response:
 ```json
 {
-    "id": "2",
-    "username": "jane_doe",
+    "id": 2,
+    "first_name": "Jane",
+    "last_name": "Doe",
     "email": "jane@example.com",
-    "created_at": "2025-09-12T10:30:00Z",
-    "updated_at": "2025-09-12T10:30:00Z"
+    "permissions": "student"
 }
 ```
 
 ### PUT /api/v1/users/{user_id}
 
-Update an existing user:
+Replace an existing user:
 
 ```bash
 curl -X PUT http://localhost:8000/api/v1/users/2 \
     -H "Content-Type: application/json" \
     -d '{
-        "username": "jane_smith",
-        "email": "jane.smith@example.com"
+        "first_name": "Jane",
+        "last_name": "Smith",
+        "email": "jane.smith@example.com",
+        "permissions": "viewer"
     }'
 ```
 
 Expected response:
 ```json
 {
-    "id": "2",
-    "username": "jane_smith",
+    "id": 2,
+    "first_name": "Jane",
+    "last_name": "Smith",
     "email": "jane.smith@example.com",
-    "created_at": "2025-09-12T10:30:00Z",
-    "updated_at": "2025-09-12T11:00:00Z"
+    "permissions": "viewer"
 }
 ```
 
@@ -119,14 +119,31 @@ Expected response:
 Delete a user:
 
 ```bash
-curl -X DELETE http://localhost:8000/api/v1/users/2
+curl -i -X DELETE http://localhost:8000/api/v1/users/2
+```
+
+Expected response: HTTP 204 No Content
+
+### PATCH /api/v1/users/{user_id}
+
+Partially update a user:
+
+```bash
+curl -X PATCH http://localhost:8000/api/v1/users/2 \
+    -H "Content-Type: application/json" \
+    -d '{
+        "first_name": "Janet"
+    }'
 ```
 
 Expected response:
 ```json
 {
-    "status": "success",
-    "message": "User deleted successfully"
+    "id": 2,
+    "first_name": "Janet",
+    "last_name": "Doe",
+    "email": "jane@example.com",
+    "permissions": "student"
 }
 ```
 
