@@ -5,6 +5,8 @@ This module defines the SQLModel database models for user-related entities.
 from enum import Enum
 from typing import Optional
 
+from email_validator import EmailNotValidError, validate_email
+from pydantic import field_validator
 from sqlmodel import Field, SQLModel
 
 
@@ -37,5 +39,19 @@ class User(SQLModel, table=True):
     last_name: str = Field(max_length=100, nullable=False)
     email: str = Field(max_length=255, nullable=False, unique=True, index=True)
     permissions: UserPermission = Field(default=UserPermission.STUDENT)
+
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, v: str) -> str:
+        """Validate email format."""
+        if not v or not v.strip():
+            raise ValueError("Email cannot be empty")
+
+        try:
+            # Use email-validator directly
+            valid_email = validate_email(v)
+            return valid_email.email
+        except EmailNotValidError as e:
+            raise ValueError(f"Invalid email format: {str(e)}")
 
     model_config = {"from_attributes": True}
