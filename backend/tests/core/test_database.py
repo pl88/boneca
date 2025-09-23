@@ -57,7 +57,7 @@ class TestDatabaseConfig:
             test_settings = Settings()
 
             # Patch the settings module to use our test instance
-            with patch("src.core.database.settings", test_settings):
+            with patch("src.core.database.db.settings", test_settings):
                 params = DatabaseConfig.get_connection_params()
                 assert params["host"] == "db.example.com"
                 assert params["port"] == 5433
@@ -86,7 +86,7 @@ class TestDatabaseConfig:
             test_settings = Settings()
 
             # Patch the settings module to use our test instance
-            with patch("src.core.database.settings", test_settings):
+            with patch("src.core.database.db.settings", test_settings):
                 url = DatabaseConfig.get_connection_url()
                 expected = "postgresql://custom_user:custom_pass@custom.host.com:5433/custom_db"
                 assert url == expected
