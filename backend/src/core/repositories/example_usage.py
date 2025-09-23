@@ -2,7 +2,7 @@
 
 This module demonstrates how to use the UserRepository in your application.
 """
-from src.core.database.session import get_session
+from src.core.database import get_session
 from src.core.repositories.user_repository import UserRepository
 from src.domain.users.models import User, UserPermission
 
@@ -77,7 +77,7 @@ def get_user_repository() -> UserRepository:
     """
     # Note: In a real FastAPI app, you'd want to use a dependency that manages
     # the session lifecycle properly. This is a simplified example.
-    from src.core.database.session import create_session
+    from src.core.database import create_session
 
     session = create_session()
     return UserRepository(session)

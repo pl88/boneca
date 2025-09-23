@@ -1,15 +1,17 @@
+import logging
 from typing import Annotated, Iterator, List, Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query, status
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session
 
-from src.core.database.session import create_session
+from src.core.database import create_session
 from src.core.repositories.user_repository import UserRepository
 from src.domain.users.models import User, UserPermission
 from src.domain.users.schemas import UserCreate, UserRead, UserUpdate
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 # --- FastAPI dependency factories & reusable parameter defaults ---
@@ -32,7 +34,12 @@ DB_DEP = Depends(get_db)
 
 def get_user_repo(db: Session = DB_DEP) -> Iterator[UserRepository]:
     """Provide a UserRepository tied to the current DB session."""
-    yield UserRepository(db)
+    try:
+        repo = UserRepository(db)
+        yield repo
+    except Exception as e:
+        logger.error(f"Failed to create UserRepository: {e}")
+        raise
 
 
 # Reusable dependency for endpoints
@@ -67,8 +74,12 @@ def list_users(
     limit: int = LIMIT_Q,
     repo: UserRepository = REPO_DEP,
 ) -> List[UserRead]:
-    users = repo.list_users(permission=permission, offset=offset, limit=limit)
-    return [UserRead.model_validate(u) for u in users]
+    try:
+        users = repo.list_users(permission=permission, offset=offset, limit=limit)
+        return [UserRead.model_validate(u) for u in users]
+    except Exception as e:
+        logger.error(f"Error in list_users: {e}", exc_info=True)
+        raise
 
 
 @router.get("/users/{user_id}", response_model=UserRead)
