@@ -3,6 +3,7 @@
 This module tests the SQLModel User model and related components.
 """
 import pytest
+from pydantic import ValidationError
 
 from src.domain.users.models import User, UserPermission
 
@@ -51,3 +52,16 @@ class TestUserModel:
     def test_user_model_table_name(self):
         """Test that the table name is set correctly."""
         assert User.__tablename__ == "users"
+
+    def test_user_model_valid_email(self):
+        """Test that valid emails are accepted."""
+        valid_emails = [
+            "user@example.com",
+            "test.email@subdomain.example.org",
+            "user+tag@example.co.uk",
+            "123@example.com",
+        ]
+
+        for email in valid_emails:
+            user = User(first_name="Test", last_name="User", email=email)
+            assert str(user.email) == email

@@ -1,7 +1,9 @@
 [run]
 branch = True
 source = src
-omit = src/main.py
+omit = 
+    src/main.py
+    src/core/repositories/example_usage.py
 
 [report]
 exclude_lines =
