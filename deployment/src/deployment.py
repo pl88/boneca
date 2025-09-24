@@ -1,3 +1,4 @@
+import datetime
 import os
 import hmac
 import hashlib
@@ -9,15 +10,19 @@ app = Flask(__name__)
 GITHUB_WEBHOOK_SECRET = os.environ.get("GITHUB_WEBHOOK_SECRET")
 REPOSITORY_PATH = os.environ.get("REPOSITORY_PATH")
 WEB_INSTALL_PATH = os.environ.get("WEB_INSTALL_PATH")
+LOGS_PATH = os.environ.get("LOGS_PATH")
+
+if (not LOGS_PATH):
+    raise RuntimeError("LOGS_PATH is not set")
 
 if (not GITHUB_WEBHOOK_SECRET):
-    raise RuntimeError("GITHUB_WEBHOOK_SECRET is not set");
+    raise RuntimeError("GITHUB_WEBHOOK_SECRET is not set")
 
 if (not REPOSITORY_PATH):
-    raise RuntimeError("WEB_INSTALL_PATH is not set");
+    raise RuntimeError("WEB_INSTALL_PATH is not set")
 
 if (not WEB_INSTALL_PATH):
-    raise RuntimeError("WEB_INSTALL_PATH is not set");
+    raise RuntimeError("WEB_INSTALL_PATH is not set")
 
 def verify_signature(payload, signature):
     """Verify GitHub webhook signature."""
@@ -44,8 +49,11 @@ def webhook():
     data = request.json
     # You could check more about deployment here, e.g., environment, branch, etc.
 
+    timestamp = datetime.now().strftime("%Y_%m_%d__%H_%M_%S")
+    logs_path = os.path.join(LOGS_PATH, f"{timestamp}.log")
+
     # Execute the rebuild.sh script (ensure it is secure)
-    exit_code = os.system("bash ./rebuild.sh")
+    exit_code = os.system(f"bash ./rebuild.sh > {logs_path}")
     if exit_code != 0:
         return f"rebuild.sh failed with exit code {exit_code}", 500
     return "Deployment handled and rebuild.sh executed.", 200
