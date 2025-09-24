@@ -4,4 +4,4 @@ set -e
 echo "🚀 Starting Boneca Deployment in production mode..."
 
 # Start the application
-exec uvicorn src.deployment:app --host 0.0.0.0 --port 8001
+exec gunicorn src.deployment:app --bind 0.0.0.0:8001
