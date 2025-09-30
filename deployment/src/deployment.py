@@ -85,7 +85,7 @@ def webhook():
         return "Ignored", 200
 
     now = time.time()
-    if last_build - now < 60:
+    if now - last_build < 60:
         logging.info(f"webkook: too early")
         return "Too early", 200
     last_build = now
