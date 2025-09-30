@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-$REPOSITORY_PATH=$1
+REPOSITORY_PATH=$1
 cd $REPOSITORY_PATH/backend
 make run-dev
 cd $REPOSITORY_PATH/frontend

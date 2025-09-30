@@ -1,4 +1,5 @@
 import datetime
+import time
 import logging
 import subprocess
 import os
@@ -10,6 +11,8 @@ from flask import Flask, request, abort
 
 LOG_SIZE = 1 * 1024 * 1024
 LOG_COUNT = 5
+
+last_build = 0
 
 app = Flask(__name__)
 
@@ -80,6 +83,13 @@ def webhook():
     if event != "push":
         return "Ignored", 200
 
+    now = time.time()
+    if last_build - now < 60:
+        logging.info(f"webkook: too early")
+        return "Too early", 200
+    last_build = now
+
+    logging.info(f"webkook: building")
     try:
         data = request.json
         url = data["repository"]["ssh_url"]
