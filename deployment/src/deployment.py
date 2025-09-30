@@ -82,7 +82,7 @@ def webhook():
 
     try:
         data = request.json
-        url = data["ssh_url"]
+        url = data["repository"]["ssh_url"]
         rev = data["after"]
         logging.info(f"webkook: push: {url} @ {rev}")
         rebuild(url, rev)
