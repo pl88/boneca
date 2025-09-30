@@ -80,9 +80,23 @@ def webhook():
         logging.info("webkook: invalid signature")
         abort(403, "Invalid signature.")
     event = request.headers.get("X-GitHub-Event", "")
-    logging.info(f"webkook: event: {event}")
-    if event != "push":
-        return "Ignored", 200
+    data = request.json
+    logging.info(f"webkook: event: {event} {data}")
+    
+    rev = None
+
+    if event == "push":
+        if not ("main" in data["ref"] or "master" in data["ref"]):
+            return "Ignored", 200
+        rev = data["after"]
+    elif event == "pull_request":
+        if data["action"] != "closed":
+            return "Ignored", 200
+        if not data["pull_request"]["merged"]:
+            return "Ignored", 200
+        rev = data["pull_request"]["merge_commit_sha"]
+    else:
+        return "Ignored", 200   
 
     now = time.time()
     if now - last_build < 60:
@@ -92,10 +106,8 @@ def webhook():
 
     logging.info(f"webkook: building")
     try:
-        data = request.json
         url = data["repository"]["ssh_url"]
-        rev = data["after"]
-        logging.info(f"webkook: push: {url} @ {rev}")
+        logging.info(f"webkook: {event}: {url} @ {rev}")
         rebuild(url, rev)
     except Exception as e:
         logging.error(f"webkook: exception: {e}")
