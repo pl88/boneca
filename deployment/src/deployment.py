@@ -72,6 +72,7 @@ def rebuild(url, revision):
 
 @app.route("/deploy/webhook", methods=["POST"])
 def webhook():
+    global last_build
     # GitHub sends the signature header as 'X-Hub-Signature-256'
     signature = request.headers.get('X-Hub-Signature-256')
     payload = request.get_data()
