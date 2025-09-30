@@ -9,7 +9,7 @@ class Git:
     def clone(self, url, revision):
         try:
             self.repo = Repo.clone_from(url, self.path)
-            self.repo.git.checkout("origin/%s" %(revision))
+            self.repo.git.checkout("%s" %(revision))
             return True
         except Exception as e:
             print("Git failed: %s" %(str(e)))
