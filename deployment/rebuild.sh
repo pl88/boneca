@@ -1,8 +1,7 @@
 #!/bin/bash
 set -e
 
-cd $REPOSITORY_PATH
-git pull
+$REPOSITORY_PATH=$1
 cd $REPOSITORY_PATH/backend
 make run-dev
 cd $REPOSITORY_PATH/frontend
