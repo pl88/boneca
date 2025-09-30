@@ -24,7 +24,7 @@ if (not LOGS_PATH):
 
 os.makedirs(LOGS_PATH, exist_ok=True)
 logHandler = logging.handlers.RotatingFileHandler(
-            filename="/tmp/run/logs/smarthomecore/core.log",
+            filename=f"{LOGS_PATH}/deployment.log",
             mode="a",
             encoding="utf-8",
             maxBytes=LOG_SIZE,
